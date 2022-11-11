@@ -1,3 +1,6 @@
+#code for streamlit app demo creation for tutorial for streamlit-based interactive data visualizations
+#Caroline Adams, last updated Nov 11 2022
+
 #importing packages
 import streamlit as st
 import requests
@@ -7,14 +10,12 @@ import altair as alt
 import seaborn as sns
 import matplotlib.pyplot as plt
 import geopandas as gpd
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import mapclassify
 import plotly.express as px
 
 #add title for streamlit app
 st.title("Communities Placed At Highest Risk of the Negative Effects of Extreme Heat from Climate Change")
 
-#add subheader
+#add subheader for background context section
 st.subheader("Background")
 
 #add text to explain background of project and data visualizations
@@ -81,22 +82,21 @@ variable_names= list(dic.values())
 #append FIPS as a variable name
 variable_names.append("FIPS")
 
-# requests.get()
-    # accepts string of URL
-    # accepts query parameters as dict
 #define function to call API query and save request
+#at cache feature to save collected data to local cache in app
 @st.cache
 def get_data():
     r = requests.get("https://api.census.gov/data/2019/acs/acs5", params = {"get":variable_keys_joined,"for":"state:*"})
     return r
 
-#call function
+#call function to get Census data
 r = get_data()
 
 #creating dataframe from census api data
 census_df = pd.DataFrame(columns=variable_names, data=r.json()[1:])
 
 #define function to clean census api data
+#add cache feature to save obtained and cleaned data to local cache in app
 @st.cache
 def clean_dta(census_df):
     #obtain list of column names
@@ -170,20 +170,21 @@ census_df_lmtd=clean_dta(census_df)
 #adding subheader to streamlit app
 st.subheader('Raw Data from the American Community Survey 5-Year Estimates (2019)')
 
-#allow users to explore raw data if they check a box
+#allow strealit app users to explore raw data if they check a box
 if st.checkbox("Explore Raw Data"):
     st.dataframe(census_df_lmtd)
 
 #create list of variables for users to select from
-variable_list2 = ['Total Population', 'Individuals with Incomes Below 150% FPL', 'Percentage of Individuals with Incomes below 150% FPL',
+variable_list = ['Total Population', 'Individuals with Incomes Below 150% FPL', 'Percentage of Individuals with Incomes below 150% FPL',
        'Percentage of Racial/Ethnic Minoritized Individuals', 'Total Number of Individuals with Disabilities', 'Percentage of Individuals with Disabilities',
        'Total Number of Uninsured Individuals', 'Percentage of Individuals without Health Insurance', 'Total Number of Individuals Living Alone',
        'Percentage of Individuals Living Alone', 'Total Number of Individuals Ages 65 and Over', 'Percentage of Individuals Ages 65 and Over',
        'Average Percentage of Individuals in at Least One Vulnerable Community']
 
 #create sidebar for users to select a variable of interest
-variable_selected2 = st.sidebar.selectbox(label = "Choose a factor that places one at higher risk of experiencing negative effects from extreme heat", options = variable_list2)
+variable_selected = st.sidebar.selectbox(label = "Choose a factor that places one at higher risk of experiencing negative effects from extreme heat", options = variable_list)
 
+#add cache feature to save obtained and cleaned data to local cache after function is run in app
 @st.cache
 #define function to get geo data
 def get_geo_dta():
@@ -197,10 +198,6 @@ def get_geo_dta():
     census_df_lmtd2=census_df_lmtd.drop(columns=['NAME'])
     #merge census_df_lmtd onto shapefile
     geo_dta = df.merge(census_df_lmtd2,on='STATEFP')
-    #load in deaths due to extreme heat data
-    heat_deaths = pd.read_csv('Data/Extreme Heat Mortality CDC.csv', dtype={'STATEFP': object})
-    #merge heat_death data with other geo_dta
-    geo_dta = geo_dta.merge(heat_deaths, on='STATEFP')
     #renaming FIPS code column to match geo_data columns
     geo_dta.rename(columns = {'STUSPS':'State'}, inplace = True)
     #removing non states
@@ -215,26 +212,11 @@ def get_geo_dta():
 #obtaining geo data
 us51=get_geo_dta()
 
-#add subheader
-st.subheader("Total Deaths from Extreme Heat Exposure (1999 through 2016; Source: CDC)")
-
-#plotting total deaths from extreme heat by state
-fig = px.choropleth(us51,locations='State', color='Deaths',
-                           color_continuous_scale="sunset",
-                           range_color=(0, 900),
-                           hover_name='NAME',
-                           locationmode='USA-states',
-                           scope="usa",
-                           labels={'Deaths':'Total Deaths'}
-                          )
-
-#showing figure in streamlit app
-st.plotly_chart(fig)
-
-#add subheader
+#add subheader for seaborn histogram
 st.subheader("Distribution of Proportions of Selected Vulnerable Community Present Across all States in the U.S. (Source: American Community Survey 5-Year Estimates, 2019)")
 
 #define function to plot histograms of nationwide distribution of vulnerable population
+#add caching feature
 @st.cache(allow_output_mutation=True)
 def plot_hist(var):
     x1=census_df_lmtd[var]
@@ -242,13 +224,14 @@ def plot_hist(var):
     fig = sns.displot(census_df_lmtd, x=x1, color = "#FF6347")
     return fig
 
-#run function and display function
-st.pyplot(plot_hist(variable_selected2))
+#run function and display plot in app
+st.pyplot(plot_hist(variable_selected))
 
-#add subheader
+#add subheader for altair bar chart
 st.subheader("Comparing Proportions of Selected Vulnerable Community Present in Each State (Source: American Community Survey 5-Year Estimates, 2019)")
 
 #defining function to generate altair_chart
+#add caching feature
 @st.cache(allow_output_mutation=True)
 def alt_chart(var):
     alt_plot = alt.Chart(census_df_lmtd).mark_bar(color="#4B0082").\
@@ -257,12 +240,13 @@ def alt_chart(var):
     return alt_plot
 
 #display chart in streamlit app
-st.altair_chart(alt_chart(variable_selected2))
+st.altair_chart(alt_chart(variable_selected))
 
-#plotting other variables by state
+#add subheader for U.S. map using plotly
 st.subheader("Variation in Proportion of Selected Vulnerable Community Across the United States (Source: American Community Survey 5-Year Estimates, 2019)")
 
 #defining function to plot variables by state
+#adding caching feature
 @st.cache(allow_output_mutation=True)
 def StatesPlot(df,var):
     fig = px.choropleth(df,locations='State', color=var,
@@ -276,4 +260,4 @@ def StatesPlot(df,var):
     return fig
 
 #showing figure in streamlit app
-st.plotly_chart(StatesPlot(us51,variable_selected2))
+st.plotly_chart(StatesPlot(us51,variable_selected))
