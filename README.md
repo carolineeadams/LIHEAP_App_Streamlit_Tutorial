@@ -1,4 +1,4 @@
-# LIHEAP
+# Streamlit Tutorial: Creating an Interactive Web App Using LIHEAP and American Community Survey Data
 
 This project used Streamlit, which is a Python package that allows users to create an interactive web app. Streamlit web apps are great platforms for interactive data visualizations in storyboard format. The first part involved creating a tutorial that outlines the basics of creating a Streamlit app and features that allow for the display and generation of interactive visualizations. The tutorial will specifically explore Streamlit’s integrations with the Python plotting libraries Matplotlib/Seaborn, Altair, and Plotly.
 
