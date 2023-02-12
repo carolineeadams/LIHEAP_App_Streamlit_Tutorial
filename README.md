@@ -8,4 +8,4 @@ The LIHEAP program offers financial assistance to households in need of support 
 
 This demo app retrieves publicly available data from the 2019 American Community Survey 5-Year Estimates related to the populations described above that are at highest risk of experiencing the negative effects of extreme heat. Variables can be explored in a variety of ways to understand variation across the United States in terms of proportions of populations in each state. An average vulnerability index is also calculated based on the available data to demonstrate which states have the highest proportions of populations vulnerable to extreme heat.
 
-The fully rendered Streamlit app can be found here: https://carolineeadams-liheap-streamlit-tutorial-50cudv.streamlit.app/
+The fully rendered Streamlit app can be found here: https://carolineeadams-liheap-app-st-streamlit-tutorial-app-code-10grs9.streamlit.app/
